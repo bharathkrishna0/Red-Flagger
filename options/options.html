@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Red Flagger settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1><img src="../icons/icon48.png" alt="" width="28" height="28"> Red Flagger settings</h1>
+
+  <section>
+    <h2>Warning banner</h2>
+    <label><input type="radio" name="bannerLevel" value="warn"> Show for <b>Be careful</b> and <b>Likely scam</b> sites (score 30+)</label>
+    <label><input type="radio" name="bannerLevel" value="danger"> Show only for <b>Likely scam</b> sites (score 60+)</label>
+  </section>
+
+  <section>
+    <h2>OpenPhish blocklist</h2>
+    <label><input type="checkbox" id="useBlocklist"> Check pages against the OpenPhish community phishing feed</label>
+    <p class="muted">The feed is downloaded every 12 hours and matched on your computer. No browsing data is sent anywhere.</p>
+    <p><span id="blocklistStatus" class="muted"></span> <button id="refresh">Update now</button></p>
+  </section>
+
+  <section>
+    <h2>Trusted sites</h2>
+    <p class="muted">Red Flagger never shows a banner on these sites.</p>
+    <ul id="trusted"></ul>
+  </section>
+
+  <script src="options.js"></script>
+</body>
+</html>
