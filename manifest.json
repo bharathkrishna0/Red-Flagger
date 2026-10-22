@@ -1,20 +1,34 @@
 {
   "manifest_version": 3,
-  "name": "Scam Detector",
-  "version": "1.0",
-  "description": "Detects scam probability of the current webpage.",
-  "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["https://scam.danwand.in/*"],
+  "name": "Red Flagger",
+  "version": "2.0.0",
+  "description": "Flags likely scam and phishing sites with local checks and the OpenPhish blocklist. Your browsing never leaves the browser.",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://raw.githubusercontent.com/openphish/*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["script.js"]
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Red Flagger",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_page": "options/options.html",
   "icons": {
-    "128": "hello_extensions.png"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
