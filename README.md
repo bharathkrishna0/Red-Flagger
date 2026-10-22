@@ -4,6 +4,10 @@ A Chrome extension (Manifest V3) that warns you when a page looks like a scam or
 
 ![Warning banner on a fake PayPal login page](docs/screenshots/phishing-page.png)
 
+The real toolbar popup and badge (`!!`) on the same page:
+
+![Toolbar badge and popup on a fake PayPal page](docs/screenshots/toolbar-popup.png)
+
 | Popup on a flagged page | Popup on an ordinary page |
 | --- | --- |
 | ![Popup showing a danger verdict](docs/screenshots/phishing-popup.png) | ![Popup showing no red flags](docs/screenshots/safe-popup.png) |
@@ -13,6 +17,14 @@ A page whose host is on the OpenPhish feed (here a feed entry mapped to a local 
 ![Banner on a blocklisted page](docs/screenshots/blocklist-page.png)
 
 The screenshots come from local test pages loaded under fake domains (for example `paypal-secure-login.xyz`) in Chrome 137. They are not real phishing sites.
+
+## Demo video
+
+An end-to-end test run in Chrome 137 with the extension pinned (90 s): fake PayPal page, an ordinary news page, an amber warning, the banner buttons, the settings page and the OpenPhish feed. The run also caught three bugs that are fixed in version 2.0.1: trusting a site from the popup left the banner up until reload, password fields added more than 3 s after load were missed, and an old verdict stayed on a tab after it navigated to a non-web page. They show up in the video because it was recorded on 2.0.0.
+
+![Demo: Red Flagger test run in Chrome](docs/demo/red-flagger-demo.webp)
+
+[Full-resolution MP4](docs/demo/red-flagger-demo.mp4)
 
 ## What it does
 
@@ -41,6 +53,47 @@ Each page gets a score from 0 to 100. Below 30 is shown as safe, 30–59 as "be 
 | Asks for a wallet seed phrase or private key | "enter your 12-word recovery phrase" |
 
 The blocklist is downloaded from `raw.githubusercontent.com/openphish/public_feed` when the extension starts and every 12 hours, stored in `chrome.storage.local`, and matched locally. The content script only collects the page title, up to 20,000 characters of visible text, form targets and whether password or secret inputs exist; it passes them to the extension's own service worker, which scores them.
+
+## Architecture
+
+Everything runs inside the browser. The only network request the extension makes is the blocklist download.
+
+```mermaid
+flowchart LR
+    subgraph Page["Each web page (http/https)"]
+        CS["content.js<br/>collects title, visible text,<br/>form targets, password inputs"]
+        BN["Warning banner<br/>(shadow DOM)"]
+    end
+    subgraph SW["background.js (service worker)"]
+        HE["src/heuristics.js<br/>URL + page checks → score 0–100"]
+        BL["src/blocklist.js<br/>host + path match"]
+        BD["Toolbar badge<br/>OK / ! / !! / ✓"]
+    end
+    subgraph Storage["chrome.storage"]
+        LOC[("local:<br/>OpenPhish feed")]
+        SYN[("sync:<br/>settings, trusted sites")]
+        SES[("session:<br/>verdict per tab")]
+    end
+    OP["OpenPhish public feed<br/>raw.githubusercontent.com"]
+    POP["popup/<br/>score, reasons, trust"]
+    OPT["options/<br/>threshold, blocklist, trusted sites"]
+
+    CS -- "analyze (features)" --> HE
+    HE --> BL
+    BL --> LOC
+    HE -- verdict --> SES
+    HE -- verdict --> BN
+    HE --> BD
+    OP -- "download every 12 h" --> LOC
+    POP -- getVerdict / setTrust --> SW
+    OPT -- settings --> SYN
+    SYN -- "change → recheck open tabs" --> CS
+```
+
+1. `content.js` runs on each page at `document_idle` (and once more as soon as a password field appears, for login forms rendered later). It sends the page features to the service worker.
+2. The service worker scores the URL and features with `src/heuristics.js` and looks the URL up in the stored OpenPhish feed with `src/blocklist.js`.
+3. The verdict is saved per tab in `chrome.storage.session`. It sets the badge, and the banner is shown if the level reaches the threshold you chose and the site isn't trusted.
+4. Trusting a site or changing the threshold (from the banner, popup or settings) updates `chrome.storage.sync`, and every open tab is re-checked straight away.
 
 ## Install (unpacked)
 

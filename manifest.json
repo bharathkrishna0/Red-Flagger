@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Red Flagger",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Flags likely scam and phishing sites with local checks and the OpenPhish blocklist. Your browsing never leaves the browser.",
   "permissions": ["storage", "alarms"],
   "host_permissions": ["https://raw.githubusercontent.com/openphish/*"],

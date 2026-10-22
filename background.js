@@ -153,4 +153,22 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === REFRESH_ALARM) refreshBlocklist();
 });
 
+// Trust or banner-threshold changes (from the popup, banner or settings page) re-check open tabs right away.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'sync' || !(changes.trusted || changes.bannerLevel)) return;
+  const tabs = await chrome.storage.session.get(null);
+  for (const key of Object.keys(tabs)) {
+    if (!key.startsWith('tab:')) continue;
+    chrome.tabs.sendMessage(Number(key.slice(4)), { type: 'recheck' }).catch(() => {});
+  }
+});
+
+// A new page load in the tab invalidates the old verdict; content.js reports again for http(s) pages.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status !== 'loading') return;
+  chrome.storage.session.remove(`tab:${tabId}`);
+  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+  chrome.action.setTitle({ tabId, title: 'Red Flagger' }).catch(() => {});
+});
+
 chrome.tabs.onRemoved.addListener((tabId) => chrome.storage.session.remove(`tab:${tabId}`));
