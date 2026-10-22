@@ -163,4 +163,12 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   }
 });
 
+// A new page load in the tab invalidates the old verdict; content.js reports again for http(s) pages.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status !== 'loading') return;
+  chrome.storage.session.remove(`tab:${tabId}`);
+  chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+  chrome.action.setTitle({ tabId, title: 'Red Flagger' }).catch(() => {});
+});
+
 chrome.tabs.onRemoved.addListener((tabId) => chrome.storage.session.remove(`tab:${tabId}`));

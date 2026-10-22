@@ -118,8 +118,14 @@
   });
 
   run();
-  // Many login pages render their form after load; check once more for late password fields.
-  setTimeout(() => {
-    if (!document.getElementById(BANNER_ID) && document.querySelector('input[type="password"]')) run();
-  }, 3000);
+
+  // Many login pages render their form after load: re-check once when a password field first appears.
+  if (!document.querySelector('input[type="password"]')) {
+    const observer = new MutationObserver(() => {
+      if (!document.querySelector('input[type="password"]')) return;
+      observer.disconnect();
+      run();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['type'] });
+  }
 })();

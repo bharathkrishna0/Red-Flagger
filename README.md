@@ -78,7 +78,7 @@ flowchart LR
     SYN -- "change → recheck open tabs" --> CS
 ```
 
-1. `content.js` runs on each page at `document_idle` (and once more after 3 s if a password field appears late). It sends the page features to the service worker.
+1. `content.js` runs on each page at `document_idle` (and once more as soon as a password field appears, for login forms rendered later). It sends the page features to the service worker.
 2. The service worker scores the URL and features with `src/heuristics.js` and looks the URL up in the stored OpenPhish feed with `src/blocklist.js`.
 3. The verdict is saved per tab in `chrome.storage.session`. It sets the badge, and the banner is shown if the level reaches the threshold you chose and the site isn't trusted.
 4. Trusting a site or changing the threshold (from the banner, popup or settings) updates `chrome.storage.sync`, and every open tab is re-checked straight away.
