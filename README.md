@@ -42,6 +42,47 @@ Each page gets a score from 0 to 100. Below 30 is shown as safe, 30–59 as "be 
 
 The blocklist is downloaded from `raw.githubusercontent.com/openphish/public_feed` when the extension starts and every 12 hours, stored in `chrome.storage.local`, and matched locally. The content script only collects the page title, up to 20,000 characters of visible text, form targets and whether password or secret inputs exist; it passes them to the extension's own service worker, which scores them.
 
+## Architecture
+
+Everything runs inside the browser. The only network request the extension makes is the blocklist download.
+
+```mermaid
+flowchart LR
+    subgraph Page["Each web page (http/https)"]
+        CS["content.js<br/>collects title, visible text,<br/>form targets, password inputs"]
+        BN["Warning banner<br/>(shadow DOM)"]
+    end
+    subgraph SW["background.js (service worker)"]
+        HE["src/heuristics.js<br/>URL + page checks → score 0–100"]
+        BL["src/blocklist.js<br/>host + path match"]
+        BD["Toolbar badge<br/>OK / ! / !! / ✓"]
+    end
+    subgraph Storage["chrome.storage"]
+        LOC[("local:<br/>OpenPhish feed")]
+        SYN[("sync:<br/>settings, trusted sites")]
+        SES[("session:<br/>verdict per tab")]
+    end
+    OP["OpenPhish public feed<br/>raw.githubusercontent.com"]
+    POP["popup/<br/>score, reasons, trust"]
+    OPT["options/<br/>threshold, blocklist, trusted sites"]
+
+    CS -- "analyze (features)" --> HE
+    HE --> BL
+    BL --> LOC
+    HE -- verdict --> SES
+    HE -- verdict --> BN
+    HE --> BD
+    OP -- "download every 12 h" --> LOC
+    POP -- getVerdict / setTrust --> SW
+    OPT -- settings --> SYN
+    SYN -- "change → recheck open tabs" --> CS
+```
+
+1. `content.js` runs on each page at `document_idle` (and once more after 3 s if a password field appears late). It sends the page features to the service worker.
+2. The service worker scores the URL and features with `src/heuristics.js` and looks the URL up in the stored OpenPhish feed with `src/blocklist.js`.
+3. The verdict is saved per tab in `chrome.storage.session`. It sets the badge, and the banner is shown if the level reaches the threshold you chose and the site isn't trusted.
+4. Trusting a site or changing the threshold (from the banner, popup or settings) updates `chrome.storage.sync`, and every open tab is re-checked straight away.
+
 ## Install (unpacked)
 
 1. Download this repository (green **Code** button → **Download ZIP**) and unzip it, or `git clone` it.

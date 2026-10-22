@@ -92,10 +92,7 @@
     trust.className = 'ghost';
     trust.textContent = 'Trust this site';
     trust.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ type: 'setTrust', host: location.hostname, trust: true }, () => {
-        removeBanner();
-        run();
-      });
+      chrome.runtime.sendMessage({ type: 'setTrust', host: location.hostname, trust: true }, () => removeBanner());
     });
     const dismiss = document.createElement('button');
     dismiss.className = 'ghost';
@@ -115,6 +112,10 @@
       else removeBanner();
     });
   }
+
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message && message.type === 'recheck') run();
+  });
 
   run();
   // Many login pages render their form after load; check once more for late password fields.

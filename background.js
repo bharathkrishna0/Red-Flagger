@@ -153,4 +153,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === REFRESH_ALARM) refreshBlocklist();
 });
 
+// Trust or banner-threshold changes (from the popup, banner or settings page) re-check open tabs right away.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'sync' || !(changes.trusted || changes.bannerLevel)) return;
+  const tabs = await chrome.storage.session.get(null);
+  for (const key of Object.keys(tabs)) {
+    if (!key.startsWith('tab:')) continue;
+    chrome.tabs.sendMessage(Number(key.slice(4)), { type: 'recheck' }).catch(() => {});
+  }
+});
+
 chrome.tabs.onRemoved.addListener((tabId) => chrome.storage.session.remove(`tab:${tabId}`));
