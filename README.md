@@ -4,6 +4,10 @@ A Chrome extension (Manifest V3) that warns you when a page looks like a scam or
 
 ![Warning banner on a fake PayPal login page](docs/screenshots/phishing-page.png)
 
+The real toolbar popup and badge (`!!`) on the same page:
+
+![Toolbar badge and popup on a fake PayPal page](docs/screenshots/toolbar-popup.png)
+
 | Popup on a flagged page | Popup on an ordinary page |
 | --- | --- |
 | ![Popup showing a danger verdict](docs/screenshots/phishing-popup.png) | ![Popup showing no red flags](docs/screenshots/safe-popup.png) |
@@ -13,6 +17,14 @@ A page whose host is on the OpenPhish feed (here a feed entry mapped to a local 
 ![Banner on a blocklisted page](docs/screenshots/blocklist-page.png)
 
 The screenshots come from local test pages loaded under fake domains (for example `paypal-secure-login.xyz`) in Chrome 137. They are not real phishing sites.
+
+## Demo video
+
+An end-to-end test run in Chrome 137 with the extension pinned (90 s): fake PayPal page, an ordinary news page, an amber warning, the banner buttons, the settings page and the OpenPhish feed. The run also caught three bugs that are fixed in version 2.0.1: trusting a site from the popup left the banner up until reload, password fields added more than 3 s after load were missed, and an old verdict stayed on a tab after it navigated to a non-web page. They show up in the video because it was recorded on 2.0.0.
+
+![Demo: Red Flagger test run in Chrome](docs/demo/red-flagger-demo.webp)
+
+[Full-resolution MP4](docs/demo/red-flagger-demo.mp4)
 
 ## What it does
 

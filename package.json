@@ -1,6 +1,6 @@
 {
   "name": "red-flagger",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "description": "Chrome extension that flags likely scam and phishing sites locally.",
   "license": "MIT",
